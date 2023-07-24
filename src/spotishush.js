@@ -111,8 +111,8 @@ async function idagioInit () {
 async function youtubeInit()
 {
   LOG('Waiting for progress bar to be ready...')
-  const playerBar = lazySelector('span.ytp-ad-preview-container');
-  youtubeSetupAdsObserver(playerBar);
+  const adContainer = lazySelector('.video-ads .ytp-ad-module');
+  youtubeSetupAdsObserver(adContainer);
   LOG('Monitoring ads now!');
   
 }
@@ -219,20 +219,18 @@ function idagioSetupAdsObserver (progressBar) {
   return mo
 }
 
-function youtubeSetupAdsObserver (playerBar) {
+function youtubeSetupAdsObserver (adContainer) {
   const mo = new MutationObserver(mutations => youtubeHandleAd(mutations[0].target))
-  mo.observe(playerBar, {
-    childList: false,
-    attributes: true,
-    attributeFilter: ['disabled']
+  mo.observe(adContainer, {
+    childList: false
   })
 
-  youtubeHandleAd(playerBar)
+  youtubeHandleAd(adContainer)
   return mo
 }
 
-function youtubeHandleAd (playerBar) {
-  if (playerBar.disabled) {
+function youtubeHandleAd (adContainer) {
+  if (adContainer.disabled) {
     LOG('Ad detected in our song queue, muting tab...')
     sendToBg({ action: 'mute' })
   } else {
