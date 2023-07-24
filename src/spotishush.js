@@ -26,6 +26,12 @@ const SITES = {
     name: 'IDAGIO',
     log_css: 'background: #fff; color: #000; font-weight: bold',
     init: idagioInit
+  },
+  
+  'music.youtube.com': {
+      name: 'Youtube',
+      log_css: 'background: #fff; color: #000; font-weight: bold',
+      init: youtubeInit
   }
 }
 
@@ -100,6 +106,15 @@ async function idagioInit () {
   const progressBar = await lazySelector('input#input-handle')
   idagioSetupAdsObserver(progressBar)
   LOG('Monitoring ads now!')
+}
+
+async function youtubeInit()
+{
+  LOG('Waiting for progress bar to be ready...')
+  const playerBar = lazySelector('span.ytp-ad-preview-container');
+  youtubeSetupAdsObserver(playerBar);
+  LOG('Monitoring ads now!');
+  
 }
 
 function lazySelector (selector) {
@@ -203,6 +218,27 @@ function idagioSetupAdsObserver (progressBar) {
   idagioHandleAd(progressBar)
   return mo
 }
+
+function youtubeSetupAdsObserver (playerBar) {
+  const mo = new MutationObserver(mutations => youtubeHandleAd(mutations[0].target))
+  mo.observe(playerBar, {
+    childList: false,
+    attributes: true,
+    attributeFilter: ['disabled']
+  })
+
+  youtubeHandleAd(playerBar)
+  return mo
+}
+
+function youtubeHandleAd (playerBar) {
+  if (playerBar.disabled) {
+    LOG('Ad detected in our song queue, muting tab...')
+    sendToBg({ action: 'mute' })
+  } else {
+    LOG('Not an ad in our song queue, unmuting tab...')
+    sendToBg({ action: 'unmute' })
+  }
 
 function idagioHandleAd (progressBar) {
   if (progressBar.disabled) {
